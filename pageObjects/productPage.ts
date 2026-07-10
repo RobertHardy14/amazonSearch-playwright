@@ -11,6 +11,8 @@ export class ProductPage {
     }
 
     async cartButtonClick() {
+        await expect(this.addToCard).toBeVisible()
         await this.addToCard.click()
+        await expect(this.page.getByText('Agregado al carrito')).toBeVisible()
     }
-}  
+}

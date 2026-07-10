@@ -8,10 +8,16 @@ export class SearchResults {
 
     constructor(page: Page) {
         this.page = page
-        this.sResultsMostSold = page.getByText('Más vendido', { exact: true }).locator('xpath=following::img[1]')
+        this.sResultsMostSold = page
+            .locator('div[data-component-type="s-search-result"], div.s-result-item')
+            .filter({ hasText: 'Más vendido' })
+            .first()
+            .getByRole('link')
+            .first()
     }
 
     async clickOnMostSold() {
+        await expect(this.sResultsMostSold).toBeVisible()
         await this.sResultsMostSold.click()
     }
 }

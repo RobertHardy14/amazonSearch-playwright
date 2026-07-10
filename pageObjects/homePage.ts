@@ -12,8 +12,14 @@ export class HomePage {
     }
 
     async gotoAmazon() {
-        await this.page.goto('https://www.amazon.com.mx/')
-        expect(this.page).toHaveTitle(/Amazon.com.mx/)
+        await this.page.goto('/')
+
+        const botCheck = this.page.getByText(/detectado un acceso automatizado|robot|CAPTCHA/i)
+        if (await botCheck.count() > 0) {
+            throw new Error('Amazon returned a bot/CAPTCHA check. The test cannot continue.')
+        }
+
+        await expect(this.searchBar).toBeVisible()
     }
 
     async clickOnSearch() {
@@ -24,8 +30,13 @@ export class HomePage {
         await this.searchBar.fill(toSearch)
     }
 
+    async submitSearch() {
+        await this.searchBar.press('Enter')
+    }
+
     async selectFirstAutocomplete() {
-        await this.page.locator('.two-pane-results-container').getByRole('rowgroup')
+        const dropdown = this.page.locator('.two-pane-results-container')
+        await expect(dropdown).toBeVisible()
         await this.page.locator('#sac-suggestion-row-1').getByRole('gridcell').click()
     }
 }

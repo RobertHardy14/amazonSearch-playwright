@@ -6,10 +6,11 @@ export class AddToCart {
 
     constructor(page: Page) {
         this.page = page
-        this.goToCart = page.getByText('Ir al Carrito')
+        this.goToCart = page.getByRole('link', { name: 'Ir al Carrito' })
     }
 
     async goToCartClick() {
+        await expect(this.goToCart.first()).toBeVisible()
         await this.goToCart.first().click()
     }
 }
