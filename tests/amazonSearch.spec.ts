@@ -9,27 +9,35 @@ test('Search on Amazon', async ({ homePage }) => {
     await searchFor(homePage, 'Dungeons')
 })
 
-test('Search and click on Best Seller', async ({ homePage, searchResults }) => {
-    await searchFor(homePage, 'Dungeons')
+test('Search and click on Best Seller', async ({ homePage, searchResults, page }) => {
+    await searchFor(homePage, 'Echo Dot')
+    const bestSellerCard = page
+        .locator('div[data-component-type="s-search-result"]')
+        .filter({ hasText: /Más vendido/i })
+        .first()
+    const bestSellerTitle = (await bestSellerCard.locator('h2.a-size-base-plus').innerText()).trim()
+    await expect(bestSellerCard.getByText(/Más vendido/i)).toBeVisible()
+
     await searchResults.clickOnMostSold()
+    await expect(page.locator('#productTitle')).toContainText(bestSellerTitle.slice(0, 40))
 })
 
-test('Search, click on best seller, add to cart', async ({ homePage, searchResults, productPage }) => {
+test('Search, click first product, add to cart', async ({ homePage, searchResults, productPage }) => {
     await searchFor(homePage, 'Dungeons')
-    await searchResults.clickOnMostSold()
+    await searchResults.clickFirstProduct()
     await productPage.cartButtonClick()
 })
 
-test('Search, bestseller, add to cart, go to cart', async ({ homePage, searchResults, productPage, addToCart }) => {
+test('Search, click first product, add to cart, go to cart', async ({ homePage, searchResults, productPage, addToCart }) => {
     await searchFor(homePage, 'Dungeons')
-    await searchResults.clickOnMostSold()
+    await searchResults.clickFirstProduct()
     await productPage.cartButtonClick()
     await addToCart.goToCartClick()
 })
 
 test('Cart count badge increments after add to cart', async ({ homePage, searchResults, productPage, page }) => {
     await searchFor(homePage, 'Dungeons')
-    await searchResults.clickOnMostSold()
+    await searchResults.clickFirstProduct()
     await productPage.cartButtonClick()
 
     const cartCount = page.locator('#nav-cart-count')
@@ -40,7 +48,7 @@ test('Cart count badge increments after add to cart', async ({ homePage, searchR
 
 test('Product page shows title and price', async ({ homePage, searchResults, productPage, page }) => {
     await searchFor(homePage, 'Dungeons')
-    await searchResults.clickOnMostSold()
+    await searchResults.clickFirstProduct()
 
     await expect(page.locator('#productTitle')).toBeVisible()
     await expect(
@@ -61,19 +69,18 @@ test('Invalid search shows no results message', async ({ homePage, page }) => {
 
 test('Cart remove item leaves an empty cart', async ({ homePage, searchResults, productPage, addToCart, cartScreen, page }) => {
     await searchFor(homePage, 'Dungeons')
-    await searchResults.clickOnMostSold()
+    await searchResults.clickFirstProduct()
     await productPage.cartButtonClick()
     await addToCart.goToCartClick()
 
-    const removeButton = page
-        .getByRole('link', { name: /Eliminar/i })
-        .or(page.getByRole('button', { name: /Eliminar/i }))
-        .first()
-    await expect(removeButton).toBeVisible()
-    await removeButton.click()
+    await cartScreen.removeItemButtonClick()
 
-    const cartCount = page.locator('#nav-cart-count')
-    await expect(cartCount).toHaveText('0')
+    const emptyCartMessage = page.getByText('Tu carrito de Amazon está vacío', { exact: true })
+    await expect(emptyCartMessage).toBeVisible()
+
+    await page.getByRole('link', { name: 'Comprar las ofertas del día' }).click()
+    await expect(page.getByRole('heading', { name: 'Cuadrícula de descuentos' })).toBeVisible()
+    await expect(page.locator('#nav-cart-count')).toHaveText('0', { timeout: 15_000 })
 })
 
 // Suggested (not implemented — requires authentication):

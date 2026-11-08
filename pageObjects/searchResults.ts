@@ -3,21 +3,36 @@ import { expect, type Locator, type Page } from '@playwright/test'
 export class SearchResults {
 
     readonly page: Page
-    readonly sResultsMostSold: Locator
+    readonly bestSellerCard: Locator
+    readonly bestSellerBadge: Locator
+    readonly bestSellerProductLink: Locator
+    readonly firstProductLink: Locator
 
 
     constructor(page: Page) {
         this.page = page
-        this.sResultsMostSold = page
-            .locator('div[data-component-type="s-search-result"], div.s-result-item')
-            .filter({ hasText: 'Más vendido' })
+        const searchResultCards = page.locator('div[data-component-type="s-search-result"]')
+        this.bestSellerCard = searchResultCards
+            .filter({ hasText: /Más vendido/i })
             .first()
-            .getByRole('link')
+        this.bestSellerBadge = this.bestSellerCard.getByText('Más vendido', { exact: true })
+        this.bestSellerProductLink = this.bestSellerCard
+            .locator('a:has(h2.a-size-base-plus)')
+            .first()
+        this.firstProductLink = searchResultCards
+            .first()
+            .locator('a:has(h2.a-size-base-plus)')
             .first()
     }
 
     async clickOnMostSold() {
-        await expect(this.sResultsMostSold).toBeVisible()
-        await this.sResultsMostSold.click()
+        await expect(this.bestSellerBadge).toBeVisible()
+        await expect(this.bestSellerProductLink).toBeVisible()
+        await this.bestSellerProductLink.click()
+    }
+
+    async clickFirstProduct() {
+        await expect(this.firstProductLink).toBeVisible()
+        await this.firstProductLink.click()
     }
 }
